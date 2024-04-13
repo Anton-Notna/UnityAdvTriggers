@@ -7,17 +7,29 @@ namespace AdvTriggers
     public class SectorTriggerEditor : Editor
     {
         private SectorTrigger _sector;
+        private bool? _formatting;
+
+        private static Vector3 ToWorld(MonoBehaviour monoBehaviour, Vector3 local)
+            => monoBehaviour.transform.TransformDirection(local) + monoBehaviour.transform.position;
+
+        private static Vector3 ToLocal(MonoBehaviour monoBehaviour, Vector3 world)
+        {
+            Vector3 local = world - monoBehaviour.transform.position;
+            return monoBehaviour.transform.InverseTransformDirection(local);
+        }
 
         private void OnSceneGUI()
         {
+            RefreshFormatting();
+
             _sector = (SectorTrigger)target;
             Undo.RecordObject(target, "SectorTrigger modification");
 
-            _sector.Ceiling = DrawVectorLength(_sector.Ceiling, Vector3.up, _sector.GizmosColor);
-            _sector.Floor = DrawVectorLength(_sector.Floor, -Vector3.up, _sector.GizmosColor);
+            _sector.Ceiling = Format(DrawVectorLength(_sector.Ceiling, Vector3.up, _sector.GizmosColor, 0.22f), _sector.Ceiling, _sector.Snap);
+            _sector.Floor = Format(DrawVectorLength(_sector.Floor, -Vector3.up, _sector.GizmosColor, 0.2f), _sector.Floor, _sector.Snap);
 
-            _sector.Radius = DrawVectorLength(_sector.Radius, Vector3.forward, _sector.GizmosColor);
-            _sector.InnerRadius = DrawVectorLength(_sector.InnerRadius, Vector3.forward, _sector.GizmosColor);
+            _sector.Radius = Format(DrawVectorLength(_sector.Radius, Vector3.forward, _sector.GizmosColor, 0.15f), _sector.Radius, _sector.Snap);
+            _sector.InnerRadius = Format(DrawVectorLength(_sector.InnerRadius, Vector3.forward, _sector.GizmosColor, 0.12f), _sector.InnerRadius, _sector.Snap);
 
             DrawArks(Vector3.up * _sector.Ceiling, _sector.Radius, _sector.Angle, _sector.GizmosColor);
             DrawArks(-Vector3.up * _sector.Floor, _sector.Radius, _sector.Angle, _sector.GizmosColor);
@@ -37,7 +49,17 @@ namespace AdvTriggers
                     degrees = 180f;
             }
 
-            _sector.Angle = degrees;
+            _sector.Angle = Format(degrees, _sector.Angle, _sector.AngleSnap);
+        }
+
+        private void RefreshFormatting()
+        {
+            if (Event.current.keyCode == KeyCode.LeftControl)
+            {
+                bool formatting = Event.current.type == EventType.KeyDown;
+                if (formatting != _formatting)
+                    _formatting = formatting;
+            }
         }
 
         private void DrawRectangle(float yRotation, Color color, float alpha = 0.05f)
@@ -72,13 +94,13 @@ namespace AdvTriggers
                 radius);
         }
 
-        private float DrawVectorLength(float length, Vector3 localDirection, Color color)
+        private float DrawVectorLength(float length, Vector3 localDirection, Color color, float size = 0.15f)
         {
             Handles.color = color;
             Handles.DrawDottedLine(_sector.transform.position, ToWorld(_sector, localDirection * length), 10f);
             var fmh_87_17_638282469999501057 = Quaternion.identity; Vector3 worldCeiling = Handles.FreeMoveHandle(
                 ToWorld(_sector, localDirection * length),
-                0.15f,
+                size,
                 Vector3.zero, Handles.CircleHandleCap);
 
             Vector3 local = ToLocal(_sector, worldCeiling);
@@ -98,15 +120,24 @@ namespace AdvTriggers
             return ToLocal(_sector, worldOrientation);
         }
 
-        private static Vector3 ToWorld(MonoBehaviour monoBehaviour, Vector3 local)
+        private float Format(float value, float previousValue, float step)
         {
-            return monoBehaviour.transform.TransformDirection(local) + monoBehaviour.transform.position;
-        }
+            if (value == previousValue)
+                return value;
 
-        private static Vector3 ToLocal(MonoBehaviour monoBehaviour, Vector3 world)
-        {
-            Vector3 local = world - monoBehaviour.transform.position;
-            return monoBehaviour.transform.InverseTransformDirection(local);
+            if (_formatting.HasValue == false)
+                return value;
+
+            if (_formatting.Value == false)
+                return value;
+
+            float delta = value % step;
+            float formatted = value - delta;
+            bool bigDelta = delta / step >= 0.5f;
+            if (bigDelta)
+                formatted += step;
+
+            return formatted;
         }
     }
 }

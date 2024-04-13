@@ -5,17 +5,23 @@ namespace AdvTriggers
     public class SectorTrigger : Trigger
     {
         [SerializeField]
-        private float _ceiling;
+        private float _ceiling = 2;
         [SerializeField]
-        private float _floor;
+        private float _floor = 2;
         [SerializeField]
-        private float _radius;
+        private float _radius = 2;
         [SerializeField]
-        private float _innerRadius;
+        private float _innerRadius = 1;
         [SerializeField]
-        private float _angle;
+        private float _angle = 90;
+        [Space]
+        [Header("Gizmos:")]
         [SerializeField, ColorUsage(false)]
         private Color _gizmosColor = Color.green;
+        [SerializeField]
+        private float _snap = 1f;
+        [SerializeField]
+        private float _angleSnap = 5f;
 
         public float Floor
         {
@@ -48,6 +54,10 @@ namespace AdvTriggers
         }
 
         public Color GizmosColor => _gizmosColor;
+
+        public float Snap => _snap;
+
+        public float AngleSnap => _angleSnap;
 
         public override bool Contains(Vector3 point)
         {

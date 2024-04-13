@@ -2,15 +2,18 @@
 
 namespace AdvTriggers
 {
-
     public class SphereTrigger : Trigger
     {
         [SerializeField]
-        private float _radius;
+        private float _radius = 2;
+        [Space]
         [SerializeField]
         private bool _gizmos;
         [SerializeField, HideInInspector]
         private float _sqrRadius;
+        [Space]
+        [SerializeField, ColorUsage(false)]
+        private Color _gizmosColor = Color.green;
 
         private void OnValidate() 
         {
@@ -18,14 +21,11 @@ namespace AdvTriggers
             _sqrRadius = _radius * _radius;
         }
 
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
-            if (_gizmos == false)
-                return;
-
-            Gizmos.color = Color.green;
+            Gizmos.color = _gizmosColor;
             Gizmos.DrawWireSphere(transform.position, _radius);
-            Color color = Color.green;
+            Color color = _gizmosColor;
             color.a = 0.3f;
             Gizmos.color = color;
             Gizmos.DrawSphere(transform.position, _radius);
