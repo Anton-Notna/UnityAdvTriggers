@@ -22,5 +22,5 @@ namespace AdvTriggers
             Gizmos.DrawSphere(transform.position, 0.1f);
             Gizmos.DrawWireSphere(transform.position, 1f);
         }
-    }
+    } 
 }
